@@ -1,7 +1,7 @@
 package com.mongodb.demo.service;
 
-import com.mongodb.demo.entity.Course;
-import com.mongodb.demo.repository.CourseRepository;
+import com.mongodb.demo.entity.ScRecord;
+import com.mongodb.demo.repository.ScRepository;
 import com.mongodb.demo.util.ExcelUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -13,42 +13,34 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class CourseService {
+public class ScService {
 
-    private final CourseRepository courseRepository;
+    private final ScRepository scRepository;
 
-    public CourseService(CourseRepository courseRepository) {
-        this.courseRepository = courseRepository;
+    public ScService(ScRepository scRepository) {
+        this.scRepository = scRepository;
     }
 
-    public List<Course> findAllCourses() {
-        return courseRepository.findAll();
+    public ScRecord create(ScRecord record) {
+        return scRepository.save(record);
     }
 
-    public List<Course> findCoursesByFcid(Integer fcid) {
-        return courseRepository.findByFcid(fcid);
-    }
-
-    public Course create(Course course) {
-        return courseRepository.save(course);
-    }
-
-    public List<Course> importCourses(MultipartFile file) {
+    public List<ScRecord> importRecords(MultipartFile file) {
         List<Map<String, String>> rows = ExcelUtils.readSheet(file);
-        List<Course> courses = rows.stream()
-                .map(this::toCourse)
+        List<ScRecord> records = rows.stream()
+                .map(this::toRecord)
                 .toList();
-        return courseRepository.saveAll(courses);
+        return scRepository.saveAll(records);
     }
 
-    private Course toCourse(Map<String, String> row) {
+    private ScRecord toRecord(Map<String, String> row) {
         Map<String, String> normalized = normalize(row);
-        Course course = new Course();
-        course.setCid(normalized.getOrDefault("CID", ""));
-        course.setName(normalized.getOrDefault("NAME", ""));
-        course.setFcid(parseInteger(normalized.get("FCID")));
-        course.setCredit(parseInteger(normalized.get("CREDIT")));
-        return course;
+        ScRecord record = new ScRecord();
+        record.setSid(normalized.getOrDefault("SID", ""));
+        record.setCid(parseInteger(normalized.get("CID")));
+        record.setScore(parseInteger(normalized.get("SCORE")));
+        record.setTid(normalized.getOrDefault("TID", ""));
+        return record;
     }
 
     private Map<String, String> normalize(Map<String, String> source) {

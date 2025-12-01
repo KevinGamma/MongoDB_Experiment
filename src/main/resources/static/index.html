@@ -3,207 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MongoDB 查询演示</title>
+    <title>MongoDB Demo 首页</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.css">
-    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.38/dist/vue.global.prod.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
     <style>
         body {
             font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
             background: radial-gradient(circle at 20% 20%, #e7f1ff, #f8fbff 35%, #ffffff 80%);
-            color: #1f2937;
+            color: #0f172a;
             margin: 0;
             padding: 0;
         }
         header {
-            padding: 24px;
-            background: linear-gradient(120deg, #1d4ed8, #0ea5e9);
+            padding: 28px 24px;
+            background: linear-gradient(120deg, #0ea5e9, #2563eb);
             color: #ffffff;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
         }
         h1 {
-            margin: 0 0 4px;
-            font-size: 28px;
-            font-weight: 700;
+            margin: 0 0 6px;
+            font-size: 30px;
+            font-weight: 800;
         }
         p.subtitle {
             margin: 0;
-            opacity: 0.9;
+            opacity: 0.88;
         }
         .container {
             max-width: 1080px;
-            margin: 24px auto 48px;
+            margin: 28px auto 56px;
             padding: 0 16px;
         }
-        .cards {
+        .grid {
+            margin-top: 18px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 12px;
-            margin-bottom: 24px;
         }
         .card {
             background: #ffffff;
-            border-radius: 12px;
-            padding: 14px 16px;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+            border-radius: 14px;
+            padding: 16px;
             border: 1px solid #e5e7eb;
-            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
-        }
-        .card button {
-            width: 100%;
-            border: none;
-            background: #2563eb;
-            color: #ffffff;
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.15s ease;
-        }
-        .card button:hover {
-            background: #1d4ed8;
-        }
-        .status {
-            margin-bottom: 12px;
-            padding: 12px 14px;
-            border-radius: 10px;
-            background: #f1f5f9;
-            border: 1px solid #e2e8f0;
-        }
-        .status strong {
-            color: #0f172a;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #ffffff;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-        }
-        th, td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #e5e7eb;
-            text-align: left;
-            font-size: 14px;
-        }
-        th {
-            background: #f8fafc;
+        .card h3 {
+            margin: 0;
+            font-size: 18px;
             font-weight: 700;
             color: #0f172a;
         }
-        tr:last-child td {
-            border-bottom: none;
+        .card p {
+            margin: 0;
+            color: #475569;
+            line-height: 1.5;
         }
-        .error {
-            color: #b91c1c;
-            margin: 8px 0 0;
+        .card button {
+            align-self: flex-start;
+            border: none;
+            padding: 9px 12px;
+            border-radius: 10px;
+            background: #2563eb;
+            color: #ffffff;
+            cursor: pointer;
+            font-weight: 700;
+            transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+        }
+        .card button:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(37, 99, 235, 0.24);
+        }
+        .card.disabled {
+            background: #f8fafc;
+            color: #94a3b8;
+        }
+        .card.disabled button {
+            background: #cbd5e1;
+            color: #0f172a;
+            cursor: not-allowed;
+            box-shadow: none;
         }
         @media (max-width: 640px) {
-            h1 { font-size: 22px; }
-            .card button { font-size: 13px; }
-            th, td { font-size: 13px; }
+            h1 { font-size: 24px; }
         }
     </style>
 </head>
 <body>
 <header>
-    <h1>MongoDB 查询演示</h1>
-    <p class="subtitle">Spring Boot + Vue + MongoDB 查询接口测试页</p>
+    <h1>MongoDB 实验程序主页</h1>
+    <p class="subtitle">每一个实验对应一个子页面</p>
 </header>
 
-<div id="app" class="container">
-    <div class="cards">
-        <div v-for="query in queries" :key="query.label" class="card">
-            <h3>{{ query.label }}</h3>
-            <p style="min-height:36px;margin:6px 0;color:#4b5563;">{{ query.desc }}</p>
-            <button :disabled="loading" @click="runQuery(query)">
-                {{ loading ? "查询中..." : "执行查询" }}
-            </button>
-        </div>
-    </div>
+<main class="container">
+    <section class="grid">
+        <article class="card">
+            <h3>查询接口</h3>
+            <p>预置常用查询卡片，一键查看 students、teachers、courses 等集合的数据。</p>
+            <button onclick="location.href='query.html'">进入</button>
+        </article>
 
-    <div class="status">
-        <div><strong>当前查询：</strong> {{ currentQuery || "未选择" }}</div>
-        <div><strong>返回数量：</strong> {{ results.length }}</div>
-        <div v-if="error" class="error">错误：{{ error }}</div>
-    </div>
+        <article class="card">
+            <h3>数据录入 & 导入</h3>
+            <p>在线表单或 Excel 文件写入 Students、Teachers、Courses、sc、tc 五个集合。</p>
+            <button onclick="location.href='data-entry.html'">进入</button>
+        </article>
 
-    <div v-if="results.length">
-        <table>
-            <thead>
-            <tr>
-                <th v-for="column in columns" :key="column">{{ column }}</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="(row, idx) in results" :key="idx">
-                <td v-for="column in columns" :key="column">{{ formatCell(row[column]) }}</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<script>
-    const { createApp } = Vue;
-
-    createApp({
-        data() {
-            return {
-                loading: false,
-                currentQuery: "",
-                results: [],
-                error: "",
-                queries: [
-                    { label: "所有学生", desc: "students 集合的全部字段", url: "/api/students" },
-                    { label: "年龄 < 20 学生", desc: "年龄小于 20 岁", url: "/api/students/under-20" },
-                    { label: "年龄 < 20 且软件学院", desc: "院系为 软件学院", url: "/api/students/under-20/software" },
-                    { label: "学生姓名和年龄", desc: "投影：只返回 name、age", url: "/api/students/name-age" },
-                    { label: "20 岁以下姓名和性别", desc: "投影：name、sex", url: "/api/students/under-20/name-sex" },
-                    { label: "所有课程", desc: "courses 集合所有课程", url: "/api/courses" },
-                    { label: "fcid = 300001 的课程", desc: "查询先行课号为 300001", url: "/api/courses/fcid/300001" },
-                    { label: "年龄 > 50 老师", desc: "教师集合中年龄大于 50", url: "/api/teachers/older-than/50" },
-                    { label: "所有男老师", desc: "sex = 男", url: "/api/teachers/sex/男" },
-                    { label: "CS 学院老师", desc: "dname = 计算机科学与技术学院", url: "/api/teachers/department/计算机科学与技术学院" }
-                ]
-            };
-        },
-        computed: {
-            columns() {
-                if (!this.results.length) {
-                    return [];
-                }
-                // Keep column order predictable based on the first item keys
-                return Object.keys(this.results[0]);
-            }
-        },
-        methods: {
-            async runQuery(query) {
-                this.loading = true;
-                this.error = "";
-                this.currentQuery = query.label;
-                this.results = [];
-                try {
-                    const response = await axios.get(query.url);
-                    this.results = response.data || [];
-                } catch (e) {
-                    this.error = e.response?.data?.message || e.message || "未知错误";
-                } finally {
-                    this.loading = false;
-                }
-            },
-            formatCell(value) {
-                if (value === null || value === undefined) return "-";
-                if (typeof value === "object") return JSON.stringify(value);
-                return value;
-            }
-        }
-    }).mount("#app");
-</script>
+        <article class="card disabled">
+            <h3>更多功能（预留）</h3>
+            <p>这里可以扩展统计报表、数据清洗、可视化等模块，主页无需变更即可挂载。</p>
+            <button disabled>敬请期待</button>
+        </article>
+    </section>
+</main>
 </body>
 </html>

@@ -1,7 +1,7 @@
 package com.mongodb.demo.service;
 
-import com.mongodb.demo.entity.Course;
-import com.mongodb.demo.repository.CourseRepository;
+import com.mongodb.demo.entity.TcRecord;
+import com.mongodb.demo.repository.TcRepository;
 import com.mongodb.demo.util.ExcelUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -13,42 +13,32 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class CourseService {
+public class TcService {
 
-    private final CourseRepository courseRepository;
+    private final TcRepository tcRepository;
 
-    public CourseService(CourseRepository courseRepository) {
-        this.courseRepository = courseRepository;
+    public TcService(TcRepository tcRepository) {
+        this.tcRepository = tcRepository;
     }
 
-    public List<Course> findAllCourses() {
-        return courseRepository.findAll();
+    public TcRecord create(TcRecord record) {
+        return tcRepository.save(record);
     }
 
-    public List<Course> findCoursesByFcid(Integer fcid) {
-        return courseRepository.findByFcid(fcid);
-    }
-
-    public Course create(Course course) {
-        return courseRepository.save(course);
-    }
-
-    public List<Course> importCourses(MultipartFile file) {
+    public List<TcRecord> importRecords(MultipartFile file) {
         List<Map<String, String>> rows = ExcelUtils.readSheet(file);
-        List<Course> courses = rows.stream()
-                .map(this::toCourse)
+        List<TcRecord> records = rows.stream()
+                .map(this::toRecord)
                 .toList();
-        return courseRepository.saveAll(courses);
+        return tcRepository.saveAll(records);
     }
 
-    private Course toCourse(Map<String, String> row) {
+    private TcRecord toRecord(Map<String, String> row) {
         Map<String, String> normalized = normalize(row);
-        Course course = new Course();
-        course.setCid(normalized.getOrDefault("CID", ""));
-        course.setName(normalized.getOrDefault("NAME", ""));
-        course.setFcid(parseInteger(normalized.get("FCID")));
-        course.setCredit(parseInteger(normalized.get("CREDIT")));
-        return course;
+        TcRecord record = new TcRecord();
+        record.setCid(parseInteger(normalized.get("CID")));
+        record.setTid(normalized.getOrDefault("TID", ""));
+        return record;
     }
 
     private Map<String, String> normalize(Map<String, String> source) {

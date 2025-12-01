@@ -5,8 +5,12 @@ import com.mongodb.demo.service.CourseService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -28,5 +32,15 @@ public class CourseController {
     @GetMapping("/fcid/{fcid}")
     public ResponseEntity<List<Course>> getCoursesByFcid(@PathVariable Integer fcid) {
         return ResponseEntity.ok(courseService.findCoursesByFcid(fcid));
+    }
+
+    @PostMapping
+    public ResponseEntity<Course> createCourse(@RequestBody Course course) {
+        return ResponseEntity.ok(courseService.create(course));
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<List<Course>> importCourses(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(courseService.importCourses(file));
     }
 }

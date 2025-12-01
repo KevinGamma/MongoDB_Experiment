@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据录入与 Excel 导入</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.38/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #e0f2fe, #ffffff);
+            color: #12344d;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            padding: 24px;
+            background: linear-gradient(120deg, #0ea5e9, #2563eb);
+            color: #ffffff;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+        h1 {
+            margin: 0 0 6px;
+            font-size: 28px;
+            font-weight: 800;
+        }
+        p.subtitle {
+            margin: 0;
+            opacity: 0.9;
+        }
+        .container {
+            max-width: 1080px;
+            margin: 24px auto 48px;
+            padding: 0 16px;
+        }
+        .nav-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #38bdf8, #6366f1);
+            color: #ffffff;
+            padding: 14px 16px;
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+            margin-bottom: 16px;
+        }
+        .nav-card button {
+            border: none;
+            background: #ffffff;
+            color: #12344d;
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+        }
+        .nav-card button:hover {
+            transform: translateY(-2px);
+        }
+        .entry-section {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.08);
+        }
+        .entry-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .entry-head h2 {
+            margin: 0 0 4px;
+        }
+        .entry-head p {
+            margin: 0;
+            color: #475569;
+        }
+        .entry-tabs {
+            margin-top: 16px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .entry-tabs button {
+            border: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: #e2e8f0;
+            color: #12344d;
+            cursor: pointer;
+            transition: background 0.15s ease, transform 0.1s ease;
+            font-weight: 600;
+        }
+        .entry-tabs button.active {
+            background: #2563eb;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+        .entry-card {
+            margin-top: 16px;
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 18px;
+            border: 1px solid #e2e8f0;
+        }
+        .entry-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        .input-grid label {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-weight: 600;
+            color: #12344d;
+        }
+        .input-grid input {
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            outline: none;
+            transition: border-color 0.12s ease, box-shadow 0.12s ease;
+        }
+        .input-grid input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+        .entry-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .entry-actions button {
+            border: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: #2563eb;
+            color: #ffffff;
+            cursor: pointer;
+            font-weight: 700;
+            transition: background 0.12s ease, transform 0.1s ease;
+        }
+        .entry-actions button:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        .upload-trigger {
+            border: 1px dashed #94a3b8;
+            color: #12344d;
+            background: #ffffff;
+            padding: 10px 12px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: border-color 0.12s ease, background 0.12s ease;
+        }
+        .upload-trigger:hover {
+            border-color: #2563eb;
+            background: #f8fafc;
+        }
+        .upload-trigger input {
+            display: none;
+        }
+        .hint {
+            margin: 0;
+            color: #475569;
+            font-size: 13px;
+        }
+        .entry-toast {
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+        .entry-toast.success {
+            background: rgba(34, 197, 94, 0.16);
+            color: #14532d;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        .entry-toast.error {
+            background: rgba(248, 113, 113, 0.16);
+            color: #7f1d1d;
+            border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+        @media (max-width: 640px) {
+            h1 { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>数据录入 / Excel 导入</h1>
+    <p class="subtitle">Students、Teachers、Courses、sc、tc 集合写入专用页面</p>
+</header>
+
+<div id="app" class="container">
+    <div class="nav-card">
+        <div>
+            <strong>导航</strong>
+            <span style="margin-left:8px;opacity:0.9;">完成录入后返回主页选择其他功能</span>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button onclick="location.href='index.html'">返回主页</button>
+        </div>
+    </div>
+
+    <section class="entry-section">
+        <div class="entry-head">
+            <div>
+                <h2>在线录入或 Excel 导入</h2>
+                <p>支持五个集合，表头要求见下方提示。</p>
+            </div>
+            <div v-if="entryMessage.text" :class="['entry-toast', entryMessage.type]">
+                {{ entryMessage.text }}
+            </div>
+        </div>
+
+        <div class="entry-tabs">
+            <button
+                    v-for="dataset in entryDatasets"
+                    :key="dataset.key"
+                    :class="{ active: dataset.key === activeEntryKey }"
+                    @click="selectEntry(dataset.key)">
+                {{ dataset.label }}
+            </button>
+        </div>
+
+        <div class="entry-card" v-if="activeDataset">
+            <form class="entry-form" @submit.prevent="submitEntry">
+                <div class="input-grid">
+                    <label v-for="field in activeDataset.fields" :key="field.key">
+                        <span>{{ field.label }}</span>
+                        <input
+                                :type="field.type || 'text'"
+                                :placeholder="field.placeholder || ''"
+                                v-model="activeDataset.form[field.key]" />
+                    </label>
+                </div>
+                <div class="entry-actions">
+                    <button type="submit" :disabled="loading">保存 1 条</button>
+                    <label class="upload-trigger">
+                        <input
+                                type="file"
+                                :ref="`${activeDataset.key}File`"
+                                accept=".xlsx,.xls"
+                                @change="onFileChange($event, activeDataset.key)" />
+                        <span>选择 Excel</span>
+                    </label>
+                    <button type="button" :disabled="loading" @click="uploadExcel">导入 Excel</button>
+                </div>
+                <p class="hint">Excel 表头：{{ activeDataset.importHeaders }}</p>
+            </form>
+        </div>
+    </section>
+</div>
+
+<script>
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                loading: false,
+                entryMessage: { type: "", text: "" },
+                activeEntryKey: "students",
+                uploadFiles: {
+                    students: null,
+                    teachers: null,
+                    courses: null,
+                    sc: null,
+                    tc: null
+                },
+                entryDatasets: [
+                    {
+                        key: "students",
+                        label: "Students",
+                        endpoint: "/api/students",
+                        importHeaders: "SID, NAME, SEX, AGE, BIRTHDAY, DNAME, CLASS",
+                        numericFields: ["age"],
+                        form: { sid: "", name: "", sex: "", age: "", birthday: "", dname: "", clazz: "" },
+                        fields: [
+                            { key: "sid", label: "学号" },
+                            { key: "name", label: "姓名" },
+                            { key: "sex", label: "性别" },
+                            { key: "age", label: "年龄", type: "number" },
+                            { key: "birthday", label: "生日", placeholder: "YYYY/MM/DD" },
+                            { key: "dname", label: "院系" },
+                            { key: "clazz", label: "班级" }
+                        ]
+                    },
+                    {
+                        key: "teachers",
+                        label: "Teachers",
+                        endpoint: "/api/teachers",
+                        importHeaders: "TID, NAME, SEX, AGE, DNAME",
+                        numericFields: ["age"],
+                        form: { tid: "", name: "", sex: "", age: "", dname: "" },
+                        fields: [
+                            { key: "tid", label: "教师编号" },
+                            { key: "name", label: "姓名" },
+                            { key: "sex", label: "性别" },
+                            { key: "age", label: "年龄", type: "number" },
+                            { key: "dname", label: "院系" }
+                        ]
+                    },
+                    {
+                        key: "courses",
+                        label: "Courses",
+                        endpoint: "/api/courses",
+                        importHeaders: "CID, NAME, FCID, CREDIT",
+                        numericFields: ["fcid", "credit"],
+                        form: { cid: "", name: "", fcid: "", credit: "" },
+                        fields: [
+                            { key: "cid", label: "课程编号" },
+                            { key: "name", label: "课程名称" },
+                            { key: "fcid", label: "先行课号", type: "number" },
+                            { key: "credit", label: "学分", type: "number" }
+                        ]
+                    },
+                    {
+                        key: "sc",
+                        label: "选课成绩 (sc)",
+                        endpoint: "/api/sc",
+                        importHeaders: "SID, CID, SCORE, TID",
+                        numericFields: ["cid", "score"],
+                        form: { sid: "", cid: "", score: "", tid: "" },
+                        fields: [
+                            { key: "sid", label: "学号" },
+                            { key: "cid", label: "课程编号", type: "number" },
+                            { key: "score", label: "成绩", type: "number" },
+                            { key: "tid", label: "教师编号" }
+                        ]
+                    },
+                    {
+                        key: "tc",
+                        label: "授课关系 (tc)",
+                        endpoint: "/api/tc",
+                        importHeaders: "CID, TID",
+                        numericFields: ["cid"],
+                        form: { cid: "", tid: "" },
+                        fields: [
+                            { key: "cid", label: "课程编号", type: "number" },
+                            { key: "tid", label: "教师编号" }
+                        ]
+                    }
+                ]
+            };
+        },
+        computed: {
+            activeDataset() {
+                return this.entryDatasets.find(item => item.key === this.activeEntryKey);
+            }
+        },
+        methods: {
+            selectEntry(key) {
+                this.activeEntryKey = key;
+                this.entryMessage = { type: "", text: "" };
+            },
+            async submitEntry() {
+                const dataset = this.activeDataset;
+                if (!dataset) return;
+                try {
+                    this.loading = true;
+                    const payload = { ...dataset.form };
+                    this.applyNumericFields(payload, dataset.numericFields);
+                    await axios.post(dataset.endpoint, payload);
+                    this.entryMessage = { type: "success", text: `${dataset.label} 已保存 1 条记录` };
+                    this.resetForm(dataset);
+                } catch (e) {
+                    this.entryMessage = { type: "error", text: e.response?.data?.message || e.message };
+                } finally {
+                    this.loading = false;
+                }
+            },
+            async uploadExcel() {
+                const dataset = this.activeDataset;
+                if (!dataset) return;
+                const file = this.uploadFiles[dataset.key];
+                if (!file) {
+                    this.entryMessage = { type: "error", text: "请先选择 Excel 文件" };
+                    return;
+                }
+                try {
+                    this.loading = true;
+                    const formData = new FormData();
+                    formData.append("file", file);
+                    await axios.post(`${dataset.endpoint}/import`, formData, {
+                        headers: { "Content-Type": "multipart/form-data" }
+                    });
+                    this.entryMessage = { type: "success", text: `${dataset.label} Excel 导入成功` };
+                    this.resetForm(dataset);
+                } catch (e) {
+                    this.entryMessage = { type: "error", text: e.response?.data?.message || e.message };
+                } finally {
+                    this.loading = false;
+                }
+            },
+            onFileChange(event, key) {
+                const [file] = event.target.files;
+                this.uploadFiles = { ...this.uploadFiles, [key]: file || null };
+            },
+            resetForm(dataset) {
+                Object.keys(dataset.form).forEach(k => dataset.form[k] = "");
+                this.uploadFiles = { ...this.uploadFiles, [dataset.key]: null };
+                const ref = this.$refs[`${dataset.key}File`];
+                if (ref && ref.value !== undefined) {
+                    ref.value = "";
+                }
+            },
+            applyNumericFields(payload, numericFields = []) {
+                numericFields.forEach(field => {
+                    const value = payload[field];
+                    if (value === "" || value === null || value === undefined) {
+                        payload[field] = null;
+                        return;
+                    }
+                    const num = Number(value);
+                    if (Number.isNaN(num)) {
+                        throw new Error(`字段 ${field} 需要数字`);
+                    }
+                    payload[field] = num;
+                });
+            }
+        }
+    }).mount("#app");
+</script>
+</body>
+</html>

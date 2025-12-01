@@ -1,5 +1,6 @@
 package com.mongodb.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -31,7 +32,8 @@ public class Student {
     private String dname;
 
     @Field("CLASS")
-    @JsonProperty("class")
+    @JsonProperty("CLASS")
+    @JsonAlias({"class", "clazz", "CLASS"})
     private String clazz;
 
 
