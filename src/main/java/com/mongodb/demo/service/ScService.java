@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class ScService {
-
     private final ScRepository scRepository;
 
     public ScService(ScRepository scRepository) {

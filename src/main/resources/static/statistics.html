@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB 数据统计</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.38/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: radial-gradient(circle at 20% 20%, #e7f1ff, #f8fbff 35%, #ffffff 80%);
+            color: #1f2937;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            padding: 24px;
+            background: linear-gradient(120deg, #7c3aed, #a855f7);
+            color: #ffffff;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+        h1 {
+            margin: 0 0 4px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        p.subtitle {
+            margin: 0;
+            opacity: 0.9;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 24px auto 48px;
+            padding: 0 16px;
+        }
+        .nav-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            background: #7c3aed;
+            color: #ffffff;
+            padding: 14px 16px;
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(124, 58, 237, 0.2);
+            margin-bottom: 16px;
+        }
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .nav-card button {
+            border: none;
+            background: #ffffff;
+            color: #0f172a;
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+        }
+        .nav-card button:hover {
+            transform: translateY(-2px);
+        }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 14px 16px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
+        }
+        .card h3 {
+            margin: 0 0 8px;
+            color: #7c3aed;
+            font-size: 15px;
+        }
+        .card button {
+            width: 100%;
+            border: none;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            color: #ffffff;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+        .card button:hover {
+            opacity: 0.9;
+        }
+        .card button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-bottom: 12px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+        }
+        .status strong {
+            color: #0f172a;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        }
+        th, td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        th {
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            font-weight: 700;
+            color: #ffffff;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover td {
+            background: #f8fafc;
+        }
+        .error {
+            color: #b91c1c;
+            margin: 8px 0 0;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-excellent {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .badge-good {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-pass {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+        .badge-fail {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        @media (max-width: 640px) {
+            h1 { font-size: 22px; }
+            .card button { font-size: 13px; }
+            th, td { font-size: 13px; padding: 8px 10px; }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>📊 数据统计分析</h1>
+    <p class="subtitle">Spring Boot + Vue + MongoDB 选课数据统计</p>
+</header>
+
+<div id="app" class="container">
+    <div class="nav-card">
+        <div>
+            <strong>导航</strong>
+            <span style="margin-left:8px;opacity:0.9;">点击下方按钮执行统计查询</span>
+        </div>
+        <div class="nav-actions">
+            <button onclick="location.href='index.html'">返回主页</button>
+        </div>
+    </div>
+
+    <div class="cards">
+        <div v-for="(query, index) in queries" :key="query.label" class="card">
+            <h3>{{ index + 1 }}. {{ query.label }}</h3>
+            <p style="min-height:36px;margin:6px 0;color:#4b5563;font-size:13px;">{{ query.desc }}</p>
+            <button :disabled="loading" @click="runQuery(query)">
+                {{ loading && currentQuery === query.label ? "统计中..." : "执行统计" }}
+            </button>
+        </div>
+    </div>
+
+    <div class="status">
+        <div><strong>当前统计：</strong> {{ currentQuery || "未选择" }}</div>
+        <div><strong>返回数量：</strong> {{ results.length }}</div>
+        <div v-if="error" class="error">错误：{{ error }}</div>
+    </div>
+
+    <div v-if="results.length" class="table-wrapper">
+        <table>
+            <thead>
+            <tr>
+                <th>#</th>
+                <th v-for="column in columns" :key="column">{{ columnLabels[column] || column }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(row, idx) in results" :key="idx">
+                <td>{{ idx + 1 }}</td>
+                <td v-for="column in columns" :key="column">
+                    <template v-if="column === 'excellent'">
+                        <span class="badge badge-excellent">{{ row[column] }}</span>
+                    </template>
+                    <template v-else-if="column === 'good'">
+                        <span class="badge badge-good">{{ row[column] }}</span>
+                    </template>
+                    <template v-else-if="column === 'pass'">
+                        <span class="badge badge-pass">{{ row[column] }}</span>
+                    </template>
+                    <template v-else-if="column === 'fail'">
+                        <span class="badge badge-fail">{{ row[column] }}</span>
+                    </template>
+                    <template v-else>
+                        {{ formatCell(row[column]) }}
+                    </template>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                loading: false,
+                currentQuery: "",
+                results: [],
+                error: "",
+                columnLabels: {
+                    cid: "课程号",
+                    courseName: "课程名称",
+                    sid: "学号",
+                    studentName: "学生姓名",
+                    avgScore: "平均成绩",
+                    courseCount: "选课数目",
+                    maxScore: "最高成绩",
+                    excellent: "优秀(≥90)",
+                    good: "良好(80-89)",
+                    pass: "合格(60-79)",
+                    fail: "不合格(<60)",
+                    total: "总门数",
+                    studentCount: "选修人数"
+                },
+                queries: [
+                    {
+                        label: "有学生选修的课程",
+                        desc: "列出有学生选修的所有课程名称（去重）",
+                        url: "/api/statistics/distinct-courses"
+                    },
+                    {
+                        label: "平均成绩前10学生",
+                        desc: "找出平均成绩排名前10的学生",
+                        url: "/api/statistics/top10-students-by-avg-score"
+                    },
+                    {
+                        label: "选课数前10学生",
+                        desc: "找出选课数目排名前10的学生",
+                        url: "/api/statistics/top10-students-by-course-count"
+                    },
+                    {
+                        label: "学生最高成绩",
+                        desc: "每位同学的最高成绩以及对应的课程名",
+                        url: "/api/statistics/student-max-score"
+                    },
+                    {
+                        label: "学生成绩分布",
+                        desc: "每位同学的成绩分布：优秀、良好、合格、不合格",
+                        url: "/api/statistics/student-score-distribution"
+                    },
+                    {
+                        label: "课程选修人数与平均分",
+                        desc: "每门课程的选修人数和平均成绩",
+                        url: "/api/statistics/course-student-count-avg"
+                    },
+                    {
+                        label: "课程最高成绩",
+                        desc: "每门课程最高成绩以及对应的学生姓名",
+                        url: "/api/statistics/course-max-score"
+                    },
+                    {
+                        label: "平均成绩前10课程",
+                        desc: "平均成绩排名前10的课程",
+                        url: "/api/statistics/top10-courses-by-avg-score"
+                    },
+                    {
+                        label: "选课人数前10课程",
+                        desc: "选课人数排名前10的课程",
+                        url: "/api/statistics/top10-courses-by-student-count"
+                    }
+                ]
+            };
+        },
+        computed: {
+            columns() {
+                if (!this.results.length) {
+                    return [];
+                }
+                return Object.keys(this.results[0]);
+            }
+        },
+        methods: {
+            async runQuery(query) {
+                this.loading = true;
+                this.error = "";
+                this.currentQuery = query.label;
+                this.results = [];
+                try {
+                    const response = await axios.get(query.url);
+                    this.results = response.data || [];
+                } catch (e) {
+                    this.error = e.response?.data?.message || e.message || "未知错误";
+                } finally {
+                    this.loading = false;
+                }
+            },
+            formatCell(value) {
+                if (value === null || value === undefined) return "-";
+                if (typeof value === "object") return JSON.stringify(value);
+                return value;
+            }
+        }
+    }).mount("#app");
+</script>
+</body>
+</html>
+
