@@ -12,7 +12,7 @@ public class Teacher {
     private String id;
 
     @Field("TID")
-    private String tid;
+    private Integer tid;
 
     @Field("NAME")
     private String name;
@@ -30,7 +30,7 @@ public class Teacher {
     public Teacher() {
     }
 
-    public Teacher(String tid, String name, String sex, Integer age, String dname) {
+    public Teacher(Integer tid, String name, String sex, Integer age, String dname) {
         this.tid = tid;
         this.name = name;
         this.sex = sex;
@@ -46,11 +46,11 @@ public class Teacher {
         this.id = id;
     }
 
-    public String getTid() {
+    public Integer getTid() {
         return tid;
     }
 
-    public void setTid(String tid) {
+    public void setTid(Integer tid) {
         this.tid = tid;
     }
 

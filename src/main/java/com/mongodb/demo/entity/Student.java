@@ -13,7 +13,7 @@ public class Student {
     private String id;
 
     @Field("SID")
-    private String sid;
+    private Long sid;
 
     @Field("NAME")
     private String name;
@@ -34,13 +34,13 @@ public class Student {
     @Field("CLASS")
     @JsonProperty("CLASS")
     @JsonAlias({"class", "clazz", "CLASS"})
-    private String clazz;
+    private Integer clazz;
 
 
     public Student() {
     }
 
-    public Student(String sid, String name, String sex, Integer age, String birthday, String dname, String clazz) {
+    public Student(Long sid, String name, String sex, Integer age, String birthday, String dname, Integer clazz) {
         this.sid = sid;
         this.name = name;
         this.sex = sex;
@@ -58,11 +58,11 @@ public class Student {
         this.id = id;
     }
 
-    public String getSid() {
+    public Long getSid() {
         return sid;
     }
 
-    public void setSid(String sid) {
+    public void setSid(Long sid) {
         this.sid = sid;
     }
 
@@ -106,11 +106,11 @@ public class Student {
         this.dname = dname;
     }
 
-    public String getClazz() {
+    public Integer getClazz() {
         return clazz;
     }
 
-    public void setClazz(String clazz) {
+    public void setClazz(Integer clazz) {
         this.clazz = clazz;
     }
 }

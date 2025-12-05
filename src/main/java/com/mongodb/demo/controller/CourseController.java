@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,13 +31,33 @@ public class CourseController {
     }
 
     @GetMapping("/fcid/{fcid}")
-    public ResponseEntity<List<Course>> getCoursesByFcid(@PathVariable Integer fcid) {
+    public ResponseEntity<List<Course>> getCoursesByFcid(@PathVariable String fcid) {
         return ResponseEntity.ok(courseService.findCoursesByFcid(fcid));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Course>> search(
+            @RequestParam(required = false) String cid,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String fcid,
+            @RequestParam(required = false) Integer minCredit,
+            @RequestParam(required = false) Integer maxCredit) {
+        return ResponseEntity.ok(courseService.search(cid, name, fcid, minCredit, maxCredit));
     }
 
     @PostMapping
     public ResponseEntity<Course> createCourse(@RequestBody Course course) {
         return ResponseEntity.ok(courseService.create(course));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Course> updateCourse(@PathVariable String id, @RequestBody Course course) {
+        return ResponseEntity.ok(courseService.update(id, course));
+    }
+
+    @PutMapping("/bulk")
+    public ResponseEntity<List<Course>> bulkUpdateCourses(@RequestBody List<Course> courses) {
+        return ResponseEntity.ok(courseService.bulkUpdate(courses));
     }
 
     @PostMapping("/import")

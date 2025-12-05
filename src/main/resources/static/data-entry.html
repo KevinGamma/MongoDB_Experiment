@@ -205,8 +205,8 @@
 </head>
 <body>
 <header>
-    <h1>数据录入 / Excel 导入</h1>
-    <p class="subtitle">Students、Teachers、Courses、sc、tc 集合写入专用页面</p>
+    <h1>实验四 使用Java做简单数据插入</h1>
+    <p class="subtitle">By 陈宣宇 202300300370</p>
 </header>
 
 <div id="app" class="container">
@@ -282,14 +282,12 @@
                 uploadFiles: {
                     students: null,
                     teachers: null,
-                    courses: null,
-                    sc: null,
-                    tc: null
+                    courses: null
                 },
                 entryDatasets: [
                     {
                         key: "students",
-                        label: "Students",
+                        label: "学生",
                         endpoint: "/api/students",
                         importHeaders: "SID, NAME, SEX, AGE, BIRTHDAY, DNAME, CLASS",
                         numericFields: ["age"],
@@ -306,7 +304,7 @@
                     },
                     {
                         key: "teachers",
-                        label: "Teachers",
+                        label: "教师",
                         endpoint: "/api/teachers",
                         importHeaders: "TID, NAME, SEX, AGE, DNAME",
                         numericFields: ["age"],
@@ -321,7 +319,7 @@
                     },
                     {
                         key: "courses",
-                        label: "Courses",
+                        label: "课程",
                         endpoint: "/api/courses",
                         importHeaders: "CID, NAME, FCID, CREDIT",
                         numericFields: ["fcid", "credit"],
@@ -331,32 +329,6 @@
                             { key: "name", label: "课程名称" },
                             { key: "fcid", label: "先行课号", type: "number" },
                             { key: "credit", label: "学分", type: "number" }
-                        ]
-                    },
-                    {
-                        key: "sc",
-                        label: "选课成绩 (sc)",
-                        endpoint: "/api/sc",
-                        importHeaders: "SID, CID, SCORE, TID",
-                        numericFields: ["cid", "score"],
-                        form: { sid: "", cid: "", score: "", tid: "" },
-                        fields: [
-                            { key: "sid", label: "学号" },
-                            { key: "cid", label: "课程编号", type: "number" },
-                            { key: "score", label: "成绩", type: "number" },
-                            { key: "tid", label: "教师编号" }
-                        ]
-                    },
-                    {
-                        key: "tc",
-                        label: "授课关系 (tc)",
-                        endpoint: "/api/tc",
-                        importHeaders: "CID, TID",
-                        numericFields: ["cid"],
-                        form: { cid: "", tid: "" },
-                        fields: [
-                            { key: "cid", label: "课程编号", type: "number" },
-                            { key: "tid", label: "教师编号" }
                         ]
                     }
                 ]

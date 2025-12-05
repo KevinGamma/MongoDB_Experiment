@@ -11,5 +11,5 @@ import java.util.List;
 public interface CourseRepository extends MongoRepository<Course, String> {
 
     @Query("{ 'FCID' : ?0 }")
-    List<Course> findByFcid(Integer fcid);
+    List<Course> findByFcid(String fcid);
 }

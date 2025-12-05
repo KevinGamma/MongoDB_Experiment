@@ -17,7 +17,7 @@ public class Course {
     private String name;
 
     @Field("FCID")
-    private Integer fcid;
+    private String fcid;
 
     @Field("CREDIT")
     private Integer credit;
@@ -25,7 +25,7 @@ public class Course {
     public Course() {
     }
 
-    public Course(String cid, String name, Integer fcid, Integer credit) {
+    public Course(String cid, String name, String fcid, Integer credit) {
         this.cid = cid;
         this.name = name;
         this.fcid = fcid;
@@ -56,11 +56,11 @@ public class Course {
         this.name = name;
     }
 
-    public Integer getFcid() {
+    public String getFcid() {
         return fcid;
     }
 
-    public void setFcid(Integer fcid) {
+    public void setFcid(String fcid) {
         this.fcid = fcid;
     }
 
