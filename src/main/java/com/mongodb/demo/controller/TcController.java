@@ -3,6 +3,7 @@ package com.mongodb.demo.controller;
 import com.mongodb.demo.entity.TcRecord;
 import com.mongodb.demo.service.TcService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,11 @@ public class TcController {
 
     public TcController(TcService tcService) {
         this.tcService = tcService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<TcRecord>> getAll() {
+        return ResponseEntity.ok(tcService.findAll());
     }
 
     @PostMapping

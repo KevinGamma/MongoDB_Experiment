@@ -25,6 +25,11 @@ public class TeacherController {
         this.teacherService = teacherService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<Teacher>> getAllTeachers() {
+        return ResponseEntity.ok(teacherService.findAll());
+    }
+
     @GetMapping("/older-than/{age}")
     public ResponseEntity<List<Teacher>> getTeachersOlderThan(@PathVariable int age) {
         return ResponseEntity.ok(teacherService.findTeachersOlderThan(age));

@@ -281,7 +281,7 @@
 </head>
 <body>
 <header>
-    <h1>学生选课管理</h1>
+    <h1>实验六 使用Java做选课功能</h1>
     <p class="subtitle">By 陈宣宇 202300300370</p>
 </header>
 
@@ -357,7 +357,7 @@
                     <th>课程编号</th>
                     <th>课程名称</th>
                     <th>学分</th>
-                    <th>教师编号</th>
+                    <th>授课教师</th>
                     <th>成绩</th>
                     <th style="width:180px;">操作</th>
                 </tr>
@@ -367,18 +367,10 @@
                     <td>
                         <input type="checkbox" :value="row.id" v-model="selectedIds" />
                     </td>
-                    <td>
-                        <select v-model="row.cid" @change="onCourseChange(row)">
-                            <option v-for="course in courses" :key="course.cid" :value="parseInt(course.cid)">
-                                {{ course.cid }}
-                            </option>
-                        </select>
-                    </td>
+                    <td>{{ row.cid }}</td>
                     <td>{{ getCourseNameByCid(row.cid) }}</td>
                     <td>{{ getCourseCreditByCid(row.cid) }}</td>
-                    <td>
-                        <input type="text" v-model="row.tid" placeholder="教师编号"/>
-                    </td>
+                    <td>{{ getTeacherDisplay(row.tid) }}</td>
                     <td>
                         <input type="number" v-model.number="row.score" placeholder="成绩"/>
                     </td>
@@ -397,30 +389,34 @@
 
     <section class="panel" v-cloak v-if="searched && searchSid">
         <h3 class="section-title">新增选课</h3>
-        <div class="add-form">
-            <label>
-                <span>学号</span>
-                <input type="text" :value="searchSid" disabled />
-            </label>
-            <label>
-                <span>课程</span>
-                <select v-model="newRecord.cid">
-                    <option value="">请选择课程</option>
-                    <option v-for="course in availableCourses" :key="course.cid" :value="parseInt(course.cid)">
-                        {{ course.cid }} - {{ course.name }} ({{ course.credit }}学分)
-                    </option>
-                </select>
-            </label>
-            <label>
-                <span>教师编号</span>
-                <input type="text" v-model="newRecord.tid" placeholder="教师编号（可选）"/>
-            </label>
-            <label>
-                <span>成绩</span>
-                <input type="number" v-model.number="newRecord.score" placeholder="成绩（可选）"/>
-            </label>
+        <div v-if="availableTcRecords.length === 0" class="empty">
+            暂无可选课程（所有开设的课程都已选择，或tc表中无数据）
         </div>
-        <button class="btn success" :disabled="loading || !newRecord.cid" @click="addCourse">添加选课</button>
+        <div v-else>
+            <div class="add-form">
+                <label>
+                    <span>学号</span>
+                    <input type="text" :value="searchSid" disabled />
+                </label>
+                <label>
+                    <span>选择课程（自动绑定教师）</span>
+                    <select v-model="newRecord.tcId" @change="onTcSelect">
+                        <option value="">请选择课程</option>
+                        <option v-for="tc in availableTcRecords" :key="tc.id" :value="tc.id">
+                            {{ getCourseNameByCid(tc.cid) }} ({{ tc.cid }}) - 教师: {{ getTeacherDisplay(tc.tid) }} ({{ tc.tid }})
+                        </option>
+                    </select>
+                </label>
+                <label>
+                    <span>成绩（可选）</span>
+                    <input type="number" v-model.number="newRecord.score" placeholder="成绩"/>
+                </label>
+            </div>
+            <div v-if="newRecord.tcId" style="margin-bottom:12px;padding:10px;background:#f0fdf4;border-radius:10px;border:1px solid #86efac;">
+                <strong>将添加:</strong> 课程 {{ getCourseNameByCid(newRecord.cid) }} ({{ newRecord.cid }})，授课教师 {{ getTeacherDisplay(newRecord.tid) }} ({{ newRecord.tid }})
+            </div>
+            <button class="btn success" :disabled="loading || !newRecord.tcId" @click="addCourse">添加选课</button>
+        </div>
     </section>
 </div>
 
@@ -437,8 +433,11 @@
                 records: [],
                 selectedIds: [],
                 courses: [],
+                tcRecords: [],  // 教师-课程对应关系
+                teachers: [],   // 教师信息
                 status: { type: "", message: "" },
                 newRecord: {
+                    tcId: "",
                     cid: "",
                     tid: "",
                     score: null
@@ -449,13 +448,16 @@
             allSelected() {
                 return this.records.length > 0 && this.records.every(row => this.selectedIds.includes(row.id));
             },
-            availableCourses() {
+            // 可选的tc记录（过滤掉已选课程）
+            availableTcRecords() {
                 const selectedCids = this.records.map(r => r.cid);
-                return this.courses.filter(c => !selectedCids.includes(parseInt(c.cid)));
+                return this.tcRecords.filter(tc => !selectedCids.includes(tc.cid));
             }
         },
         mounted() {
             this.loadCourses();
+            this.loadTcRecords();
+            this.loadTeachers();
         },
         methods: {
             async loadCourses() {
@@ -466,6 +468,22 @@
                     this.setStatus("error", "加载课程列表失败: " + (e.response?.data?.message || e.message));
                 }
             },
+            async loadTcRecords() {
+                try {
+                    const response = await axios.get("/api/tc");
+                    this.tcRecords = response.data || [];
+                } catch (e) {
+                    this.setStatus("error", "加载教师授课数据失败: " + (e.response?.data?.message || e.message));
+                }
+            },
+            async loadTeachers() {
+                try {
+                    const response = await axios.get("/api/teachers");
+                    this.teachers = response.data || [];
+                } catch (e) {
+                    console.warn("加载教师列表失败", e);
+                }
+            },
             async searchStudentCourses() {
                 if (!this.searchSid.trim()) {
                     this.setStatus("error", "请输入学号");
@@ -474,7 +492,6 @@
                 this.loading = true;
                 this.status = { type: "", message: "" };
                 try {
-                    // 查询学生信息
                     const studentResponse = await axios.get("/api/students/search", {
                         params: { sid: this.searchSid.trim() }
                     });
@@ -491,8 +508,6 @@
                         this.studentInfo = null;
                         this.setStatus("info", "未找到该学号对应的学生信息");
                     }
-
-                    // 查询选课记录
                     const response = await axios.get(`/api/sc/student/${this.searchSid.trim()}`);
                     this.records = response.data || [];
                     this.selectedIds = [];
@@ -525,8 +540,24 @@
                 const course = this.courses.find(c => parseInt(c.cid) === cid);
                 return course ? course.credit : "";
             },
-            onCourseChange(row) {
-                // 更新关联信息（如需要）
+            getTeacherDisplay(tid) {
+                // tid可能是字符串或数字，需要统一转换比较
+                const tidStr = String(tid);
+                const teacher = this.teachers.find(t => String(t.tid) === tidStr);
+                return teacher ? teacher.name : tid;
+            },
+            onTcSelect() {
+                // 当选择tc记录时，自动填充课程和教师
+                if (this.newRecord.tcId) {
+                    const tc = this.tcRecords.find(t => t.id === this.newRecord.tcId);
+                    if (tc) {
+                        this.newRecord.cid = tc.cid;
+                        this.newRecord.tid = tc.tid;
+                    }
+                } else {
+                    this.newRecord.cid = "";
+                    this.newRecord.tid = "";
+                }
             },
             async saveRow(row) {
                 if (!row.id) {
@@ -621,7 +652,7 @@
                 }
             },
             async addCourse() {
-                if (!this.newRecord.cid) {
+                if (!this.newRecord.tcId) {
                     this.setStatus("error", "请选择要添加的课程");
                     return;
                 }
@@ -630,7 +661,7 @@
                     const payload = {
                         sid: this.searchSid.trim(),
                         cid: this.newRecord.cid,
-                        tid: this.newRecord.tid || null,
+                        tid: this.newRecord.tid,
                         score: this.newRecord.score
                     };
                     const response = await axios.post("/api/sc", payload);
@@ -645,6 +676,7 @@
             },
             resetNewRecord() {
                 this.newRecord = {
+                    tcId: "",
                     cid: "",
                     tid: "",
                     score: null

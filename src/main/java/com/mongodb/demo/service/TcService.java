@@ -21,6 +21,14 @@ public class TcService {
         this.tcRepository = tcRepository;
     }
 
+    public List<TcRecord> findAll() {
+        return tcRepository.findAll();
+    }
+
+    public List<TcRecord> findByCid(Integer cid) {
+        return tcRepository.findByCid(cid);
+    }
+
     public TcRecord create(TcRecord record) {
         return tcRepository.save(record);
     }

@@ -30,6 +30,10 @@ public class TeacherService {
         return teacherRepository.findByAgeGreaterThan(age);
     }
 
+    public List<Teacher> findAll() {
+        return teacherRepository.findAll();
+    }
+
     public List<Teacher> findTeachersBySex(String sex) {
         return teacherRepository.findBySex(sex);
     }
