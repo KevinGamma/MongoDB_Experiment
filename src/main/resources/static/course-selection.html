@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生选课管理</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.38/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: "Segoe UI", "Nunito", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: radial-gradient(circle at 15% 20%, #fef3c7, #fff7ed 32%, #eef2ff 70%);
+            color: #0f172a;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            padding: 26px 24px 22px;
+            background: linear-gradient(120deg, #0ea5e9, #22c55e);
+            color: #ffffff;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.14);
+        }
+        h1 {
+            margin: 0 0 6px;
+            font-size: 30px;
+            font-weight: 800;
+        }
+        p.subtitle {
+            margin: 0;
+            opacity: 0.9;
+        }
+        .container {
+            max-width: 1180px;
+            margin: 24px auto 60px;
+            padding: 0 16px;
+        }
+        .nav-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(120deg, #0ea5e9, #22c55e);
+            color: #ffffff;
+            padding: 14px 16px;
+            border-radius: 16px;
+            box-shadow: 0 14px 32px rgba(14, 165, 233, 0.18);
+            margin-bottom: 14px;
+        }
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .nav-card button,
+        .pill-btn {
+            border: none;
+            background: #ffffff;
+            color: #0f172a;
+            padding: 10px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+        }
+        .nav-card button:hover,
+        .pill-btn:hover {
+            transform: translateY(-2px);
+            background: #f8fafc;
+        }
+        .panel {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 14px;
+        }
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .search-box label {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .search-box input {
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            outline: none;
+            transition: border-color 0.12s ease, box-shadow 0.12s ease;
+            min-width: 200px;
+        }
+        .search-box input:focus {
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.16);
+        }
+        .btn {
+            border: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: background 0.12s ease, transform 0.1s ease, box-shadow 0.12s ease;
+        }
+        .btn.primary {
+            background: #0ea5e9;
+            color: #ffffff;
+            box-shadow: 0 8px 16px rgba(14, 165, 233, 0.24);
+        }
+        .btn.primary:hover {
+            background: #0284c7;
+            transform: translateY(-1px);
+        }
+        .btn.secondary {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+        .btn.success {
+            background: #22c55e;
+            color: #ffffff;
+            box-shadow: 0 8px 16px rgba(34, 197, 94, 0.24);
+        }
+        .btn.success:hover {
+            background: #16a34a;
+            transform: translateY(-1px);
+        }
+        .btn.danger {
+            background: #ef4444;
+            color: #ffffff;
+            box-shadow: 0 8px 16px rgba(239, 68, 68, 0.24);
+        }
+        .btn.danger:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 12px 0 10px;
+        }
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+        .status.success {
+            background: rgba(34, 197, 94, 0.16);
+            color: #14532d;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        .status.error {
+            background: rgba(239, 68, 68, 0.16);
+            color: #7f1d1d;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .status.info {
+            background: rgba(14, 165, 233, 0.16);
+            color: #0c4a6e;
+            border: 1px solid rgba(14, 165, 233, 0.3);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+        th, td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+            font-size: 14px;
+        }
+        th {
+            background: #f8fafc;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        td input, td select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        td input:focus, td select:focus {
+            border-color: #22c55e;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.16);
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+        }
+        .empty {
+            padding: 14px 12px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            color: #475569;
+            text-align: center;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0 0 12px;
+            color: #0f172a;
+        }
+        .add-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .add-form label {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .add-form input, .add-form select {
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            outline: none;
+            transition: border-color 0.12s ease, box-shadow 0.12s ease;
+        }
+        .add-form input:focus, .add-form select:focus {
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.16);
+        }
+        .student-info {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 12px;
+            background: #f0f9ff;
+            border-radius: 12px;
+            border: 1px solid #bae6fd;
+            margin-bottom: 12px;
+        }
+        .student-info .info-item {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .student-info .info-label {
+            font-weight: 700;
+            color: #0369a1;
+        }
+        .student-info .info-value {
+            color: #0f172a;
+        }
+        @media (max-width: 720px) {
+            h1 { font-size: 24px; }
+            th, td { font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>学生选课管理</h1>
+    <p class="subtitle">By 陈宣宇 202300300370</p>
+</header>
+
+<div id="app" class="container">
+    <div class="nav-card">
+        <div>
+            <strong>操作提示</strong>
+            <span style="margin-left:8px;opacity:0.85;">输入学号查询已选课程，可更新或删除已选课程，也可以新增选课。</span>
+        </div>
+        <div class="nav-actions">
+            <button onclick="location.href='index.html'">返回主页</button>
+        </div>
+    </div>
+
+    <section class="panel" v-cloak>
+        <h3 class="section-title">查询学生选课</h3>
+        <div class="search-box">
+            <label>
+                <span>学号</span>
+                <input type="text" v-model="searchSid" placeholder="请输入学号" @keyup.enter="searchStudentCourses">
+            </label>
+            <button class="btn primary" :disabled="loading" @click="searchStudentCourses">查询选课</button>
+            <button class="btn secondary" @click="clearSearch">清空</button>
+        </div>
+
+        <div v-if="studentInfo" class="student-info" style="margin-top:12px;">
+            <div class="info-item">
+                <span class="info-label">学号:</span>
+                <span class="info-value">{{ studentInfo.sid }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">姓名:</span>
+                <span class="info-value">{{ studentInfo.name }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">院系:</span>
+                <span class="info-value">{{ studentInfo.dname }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">班级:</span>
+                <span class="info-value">{{ studentInfo.clazz }}</span>
+            </div>
+        </div>
+
+        <div v-if="status.message" :class="['status', status.type]" style="margin-top:12px;">
+            {{ status.message }}
+        </div>
+    </section>
+
+    <section class="panel" v-cloak v-if="searched">
+        <h3 class="section-title">已选课程列表</h3>
+        <div class="toolbar">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <span class="pill-btn" style="background:#e0f2fe;">共 {{ records.length }} 门课程</span>
+                <span class="pill-btn" style="background:#dcfce7;">已勾选 {{ selectedIds.length }} 条</span>
+                <button class="btn primary" :disabled="loading || !selectedIds.length" @click="bulkSave">
+                    批量保存勾选
+                </button>
+                <button class="btn danger" :disabled="loading || !selectedIds.length" @click="bulkDelete">
+                    批量删除勾选
+                </button>
+                <button class="btn secondary" :disabled="loading" @click="searchStudentCourses">刷新</button>
+            </div>
+        </div>
+
+        <div v-if="records.length" class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th style="width:52px;">
+                        <input type="checkbox" :checked="allSelected" @change="toggleSelectAll($event)">
+                    </th>
+                    <th>课程编号</th>
+                    <th>课程名称</th>
+                    <th>学分</th>
+                    <th>教师编号</th>
+                    <th>成绩</th>
+                    <th style="width:180px;">操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="row in records" :key="row.id">
+                    <td>
+                        <input type="checkbox" :value="row.id" v-model="selectedIds" />
+                    </td>
+                    <td>
+                        <select v-model="row.cid" @change="onCourseChange(row)">
+                            <option v-for="course in courses" :key="course.cid" :value="parseInt(course.cid)">
+                                {{ course.cid }}
+                            </option>
+                        </select>
+                    </td>
+                    <td>{{ getCourseNameByCid(row.cid) }}</td>
+                    <td>{{ getCourseCreditByCid(row.cid) }}</td>
+                    <td>
+                        <input type="text" v-model="row.tid" placeholder="教师编号"/>
+                    </td>
+                    <td>
+                        <input type="number" v-model.number="row.score" placeholder="成绩"/>
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:6px;">
+                            <button class="btn primary" :disabled="loading" @click="saveRow(row)">保存</button>
+                            <button class="btn danger" :disabled="loading" @click="deleteRow(row)">删除</button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div v-else class="empty">该学生暂无选课记录。</div>
+    </section>
+
+    <section class="panel" v-cloak v-if="searched && searchSid">
+        <h3 class="section-title">新增选课</h3>
+        <div class="add-form">
+            <label>
+                <span>学号</span>
+                <input type="text" :value="searchSid" disabled />
+            </label>
+            <label>
+                <span>课程</span>
+                <select v-model="newRecord.cid">
+                    <option value="">请选择课程</option>
+                    <option v-for="course in availableCourses" :key="course.cid" :value="parseInt(course.cid)">
+                        {{ course.cid }} - {{ course.name }} ({{ course.credit }}学分)
+                    </option>
+                </select>
+            </label>
+            <label>
+                <span>教师编号</span>
+                <input type="text" v-model="newRecord.tid" placeholder="教师编号（可选）"/>
+            </label>
+            <label>
+                <span>成绩</span>
+                <input type="number" v-model.number="newRecord.score" placeholder="成绩（可选）"/>
+            </label>
+        </div>
+        <button class="btn success" :disabled="loading || !newRecord.cid" @click="addCourse">添加选课</button>
+    </section>
+</div>
+
+<script>
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                loading: false,
+                searched: false,
+                searchSid: "",
+                studentInfo: null,
+                records: [],
+                selectedIds: [],
+                courses: [],
+                status: { type: "", message: "" },
+                newRecord: {
+                    cid: "",
+                    tid: "",
+                    score: null
+                }
+            };
+        },
+        computed: {
+            allSelected() {
+                return this.records.length > 0 && this.records.every(row => this.selectedIds.includes(row.id));
+            },
+            availableCourses() {
+                const selectedCids = this.records.map(r => r.cid);
+                return this.courses.filter(c => !selectedCids.includes(parseInt(c.cid)));
+            }
+        },
+        mounted() {
+            this.loadCourses();
+        },
+        methods: {
+            async loadCourses() {
+                try {
+                    const response = await axios.get("/api/courses");
+                    this.courses = response.data || [];
+                } catch (e) {
+                    this.setStatus("error", "加载课程列表失败: " + (e.response?.data?.message || e.message));
+                }
+            },
+            async searchStudentCourses() {
+                if (!this.searchSid.trim()) {
+                    this.setStatus("error", "请输入学号");
+                    return;
+                }
+                this.loading = true;
+                this.status = { type: "", message: "" };
+                try {
+                    // 查询学生信息
+                    const studentResponse = await axios.get("/api/students/search", {
+                        params: { sid: this.searchSid.trim() }
+                    });
+                    const students = studentResponse.data || [];
+                    if (students.length > 0) {
+                        const student = students[0];
+                        this.studentInfo = {
+                            sid: student.sid,
+                            name: student.name,
+                            dname: student.dname,
+                            clazz: student.clazz || student.CLASS || student["class"] || ""
+                        };
+                    } else {
+                        this.studentInfo = null;
+                        this.setStatus("info", "未找到该学号对应的学生信息");
+                    }
+
+                    // 查询选课记录
+                    const response = await axios.get(`/api/sc/student/${this.searchSid.trim()}`);
+                    this.records = response.data || [];
+                    this.selectedIds = [];
+                    this.searched = true;
+                    if (this.records.length === 0 && this.studentInfo) {
+                        this.setStatus("info", "该学生暂无选课记录，可以在下方新增选课");
+                    } else if (this.records.length > 0) {
+                        this.setStatus("success", `查询成功，共 ${this.records.length} 条选课记录`);
+                    }
+                } catch (e) {
+                    this.setStatus("error", e.response?.data?.message || e.message || "查询失败");
+                } finally {
+                    this.loading = false;
+                }
+            },
+            clearSearch() {
+                this.searchSid = "";
+                this.studentInfo = null;
+                this.records = [];
+                this.selectedIds = [];
+                this.searched = false;
+                this.status = { type: "", message: "" };
+                this.resetNewRecord();
+            },
+            getCourseNameByCid(cid) {
+                const course = this.courses.find(c => parseInt(c.cid) === cid);
+                return course ? course.name : "";
+            },
+            getCourseCreditByCid(cid) {
+                const course = this.courses.find(c => parseInt(c.cid) === cid);
+                return course ? course.credit : "";
+            },
+            onCourseChange(row) {
+                // 更新关联信息（如需要）
+            },
+            async saveRow(row) {
+                if (!row.id) {
+                    this.setStatus("error", "缺少记录ID，无法更新");
+                    return;
+                }
+                try {
+                    this.loading = true;
+                    const payload = {
+                        id: row.id,
+                        sid: this.searchSid.trim(),
+                        cid: row.cid,
+                        tid: row.tid || null,
+                        score: row.score
+                    };
+                    const response = await axios.put(`/api/sc/${row.id}`, payload);
+                    Object.assign(row, response.data);
+                    this.setStatus("success", "保存成功");
+                } catch (e) {
+                    this.setStatus("error", e.response?.data?.message || e.message || "保存失败");
+                } finally {
+                    this.loading = false;
+                }
+            },
+            async bulkSave() {
+                const selectedRows = this.records.filter(r => this.selectedIds.includes(r.id));
+                if (!selectedRows.length) {
+                    this.setStatus("error", "请先勾选需要保存的记录");
+                    return;
+                }
+                try {
+                    this.loading = true;
+                    const payload = selectedRows.map(row => ({
+                        id: row.id,
+                        sid: this.searchSid.trim(),
+                        cid: row.cid,
+                        tid: row.tid || null,
+                        score: row.score
+                    }));
+                    const response = await axios.put("/api/sc/bulk", payload);
+                    const updatedMap = new Map((response.data || []).map(item => [item.id, item]));
+                    this.records = this.records.map(row => updatedMap.get(row.id) || row);
+                    this.selectedIds = [];
+                    this.setStatus("success", `批量保存成功，共 ${response.data?.length || 0} 条`);
+                } catch (e) {
+                    this.setStatus("error", e.response?.data?.message || e.message || "批量保存失败");
+                } finally {
+                    this.loading = false;
+                }
+            },
+            async deleteRow(row) {
+                if (!row.id) {
+                    this.setStatus("error", "缺少记录ID，无法删除");
+                    return;
+                }
+                if (!confirm(`确定要删除课程 ${this.getCourseNameByCid(row.cid)} 的选课记录吗？`)) {
+                    return;
+                }
+                try {
+                    this.loading = true;
+                    await axios.delete(`/api/sc/${row.id}`);
+                    this.records = this.records.filter(r => r.id !== row.id);
+                    this.selectedIds = this.selectedIds.filter(id => id !== row.id);
+                    this.setStatus("success", "删除成功");
+                } catch (e) {
+                    this.setStatus("error", e.response?.data?.message || e.message || "删除失败");
+                } finally {
+                    this.loading = false;
+                }
+            },
+            async bulkDelete() {
+                const selectedRows = this.records.filter(r => this.selectedIds.includes(r.id));
+                if (!selectedRows.length) {
+                    this.setStatus("error", "请先勾选需要删除的记录");
+                    return;
+                }
+                if (!confirm(`确定要删除选中的 ${selectedRows.length} 条选课记录吗？`)) {
+                    return;
+                }
+                try {
+                    this.loading = true;
+                    for (const row of selectedRows) {
+                        await axios.delete(`/api/sc/${row.id}`);
+                    }
+                    this.records = this.records.filter(r => !this.selectedIds.includes(r.id));
+                    this.setStatus("success", `批量删除成功，共 ${selectedRows.length} 条`);
+                    this.selectedIds = [];
+                } catch (e) {
+                    this.setStatus("error", e.response?.data?.message || e.message || "批量删除失败");
+                } finally {
+                    this.loading = false;
+                }
+            },
+            async addCourse() {
+                if (!this.newRecord.cid) {
+                    this.setStatus("error", "请选择要添加的课程");
+                    return;
+                }
+                try {
+                    this.loading = true;
+                    const payload = {
+                        sid: this.searchSid.trim(),
+                        cid: this.newRecord.cid,
+                        tid: this.newRecord.tid || null,
+                        score: this.newRecord.score
+                    };
+                    const response = await axios.post("/api/sc", payload);
+                    this.records.push(response.data);
+                    this.resetNewRecord();
+                    this.setStatus("success", "选课添加成功");
+                } catch (e) {
+                    this.setStatus("error", e.response?.data?.message || e.message || "添加选课失败");
+                } finally {
+                    this.loading = false;
+                }
+            },
+            resetNewRecord() {
+                this.newRecord = {
+                    cid: "",
+                    tid: "",
+                    score: null
+                };
+            },
+            toggleSelectAll(event) {
+                const ids = this.records.map(row => row.id);
+                if (event.target.checked) {
+                    this.selectedIds = [...ids];
+                } else {
+                    this.selectedIds = [];
+                }
+            },
+            setStatus(type, message) {
+                this.status = { type, message };
+                if (type === "success" || type === "info") {
+                    setTimeout(() => {
+                        if (this.status.type === type) {
+                            this.status = { type: "", message: "" };
+                        }
+                    }, 3000);
+                }
+            }
+        }
+    }).mount("#app");
+</script>
+</body>
+</html>
+

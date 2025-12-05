@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +24,34 @@ public class ScService {
 
     public ScRecord create(ScRecord record) {
         return scRepository.save(record);
+    }
+
+    public List<ScRecord> findBySid(String sid) {
+        return scRepository.findBySid(sid);
+    }
+
+    public ScRecord update(String id, ScRecord record) {
+        ScRecord existing = scRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("选课记录不存在: " + id));
+        existing.setSid(record.getSid());
+        existing.setCid(record.getCid());
+        existing.setScore(record.getScore());
+        existing.setTid(record.getTid());
+        return scRepository.save(existing);
+    }
+
+    public List<ScRecord> bulkUpdate(List<ScRecord> records) {
+        return records.stream()
+                .map(record -> update(record.getId(), record))
+                .collect(Collectors.toList());
+    }
+
+    public void delete(String id) {
+        scRepository.deleteById(id);
+    }
+
+    public Optional<ScRecord> findById(String id) {
+        return scRepository.findById(id);
     }
 
     public List<ScRecord> importRecords(MultipartFile file) {
